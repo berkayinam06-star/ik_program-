@@ -91,7 +91,7 @@ export default async function DailyAttendancePage({
         subtitle="Manuel devam kaydı ekle veya düzelt"
       />
 
-      <div className="p-6 space-y-5">
+      <div className="p-3 sm:p-6 space-y-4 sm:space-y-5 min-w-0">
         {/* Day summary and status management card */}
         {selectedEmployeeId && (
           <div className="card p-4 flex flex-wrap gap-6 items-center justify-between">

@@ -293,25 +293,25 @@ export function MonthlyMatrix({
   return (
     <div className="space-y-4" onClick={() => setCellMenu(null)}>
       {/* Toolbar */}
-      <div className="card p-4 flex flex-wrap items-center gap-3">
+      <div className="card p-3 sm:p-4 flex flex-wrap items-center gap-2 sm:gap-3">
         {/* Month navigation */}
-        <div className="flex items-center gap-2">
-          <button onClick={() => navigate(-1)} className="btn-secondary btn-icon btn-sm">
+        <div className="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-start">
+          <button onClick={() => navigate(-1)} className="btn-secondary btn-icon btn-sm" aria-label="Önceki Ay">
             <ChevronLeft className="w-4 h-4" />
           </button>
           <span className="text-sm font-semibold text-slate-200 w-28 text-center">
             {MONTHS_TR[month]} {year}
           </span>
-          <button onClick={() => navigate(1)} className="btn-secondary btn-icon btn-sm">
+          <button onClick={() => navigate(1)} className="btn-secondary btn-icon btn-sm" aria-label="Sonraki Ay">
             <ChevronRight className="w-4 h-4" />
           </button>
         </div>
 
-        <div className="w-px h-6 bg-slate-700" />
+        <div className="hidden sm:block w-px h-6 bg-slate-700" />
 
         {/* Company filter */}
         <select
-          className="select w-44"
+          className="select w-full sm:w-44 text-xs sm:text-sm"
           value={selectedCompanyId}
           onChange={(e) => applyFilter("companyId", e.target.value)}
         >
@@ -322,7 +322,7 @@ export function MonthlyMatrix({
 
         {/* Workplace filter */}
         <select
-          className="select w-44"
+          className="select w-full sm:w-44 text-xs sm:text-sm"
           value={selectedWorkplaceId ?? ""}
           onChange={(e) => applyFilter("workplaceId", e.target.value)}
         >
@@ -332,28 +332,29 @@ export function MonthlyMatrix({
           ))}
         </select>
 
-        <div className="flex-1" />
+        <div className="hidden sm:block flex-1" />
 
-        {/* Lock / Unlock */}
-        <button
-          onClick={handleLockToggle}
-          disabled={isPending || !selectedCompanyId}
-          className={clsx("btn btn-sm gap-2", isLocked ? "btn-danger" : "btn-success")}
-        >
-          {isPending ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
-          ) : isLocked ? (
-            <><Unlock className="w-4 h-4" /> Kilidi Aç</>
-          ) : (
-            <><Lock className="w-4 h-4" /> Dönemi Onayla</>
-          )}
-        </button>
+        {/* Lock / Unlock and Export */}
+        <div className="flex items-center gap-2 w-full sm:w-auto justify-end pt-1 sm:pt-0">
+          <button
+            onClick={handleLockToggle}
+            disabled={isPending || !selectedCompanyId}
+            className={clsx("btn btn-sm gap-2 flex-1 sm:flex-initial", isLocked ? "btn-danger" : "btn-success")}
+          >
+            {isPending ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : isLocked ? (
+              <><Unlock className="w-4 h-4" /> Kilidi Aç</>
+            ) : (
+              <><Lock className="w-4 h-4" /> Dönemi Onayla</>
+            )}
+          </button>
 
-        {/* Excel export */}
-        <button onClick={handleExcelExport} className="btn-secondary btn-sm">
-          <Download className="w-4 h-4" />
-          Excel İndir
-        </button>
+          <button onClick={handleExcelExport} className="btn-secondary btn-sm flex-1 sm:flex-initial gap-1.5">
+            <Download className="w-4 h-4" />
+            Excel İndir
+          </button>
+        </div>
       </div>
 
       {/* Lock status banner */}
@@ -377,17 +378,23 @@ export function MonthlyMatrix({
         </div>
       )}
 
+      {/* Mobile scroll hint */}
+      <div className="sm:hidden flex items-center justify-between px-3 py-1.5 rounded-lg bg-blue-950/40 border border-blue-900/50 text-[11px] text-blue-300">
+        <span>👉 Günleri görmek için tabloyu sağa kaydırın</span>
+        <span className="font-mono text-[10px] text-blue-400 font-bold">1 - {days.length} Gün</span>
+      </div>
+
       {/* Matrix table */}
       <div className="card overflow-hidden">
-        <div className="overflow-x-auto scrollbar-hide">
+        <div className="overflow-x-auto touch-pan-x overscroll-x-contain pb-2">
           <table className="text-xs border-collapse w-full">
             {/* Header */}
             <thead>
               <tr className="bg-slate-900 border-b border-slate-700">
-                <th className="sticky left-0 z-10 bg-slate-900 px-3 py-3 text-left text-slate-400 font-semibold whitespace-nowrap border-r border-slate-700 min-w-48">
+                <th className="sticky left-0 z-20 bg-slate-900 px-2 sm:px-3 py-2.5 sm:py-3 text-left text-slate-400 font-semibold whitespace-nowrap border-r border-slate-700 min-w-32 sm:min-w-48">
                   Personel
                 </th>
-                <th className="sticky left-48 z-10 bg-slate-900 px-2 py-3 text-center text-slate-400 font-semibold border-r border-slate-700 whitespace-nowrap">
+                <th className="sm:sticky sm:left-48 z-10 bg-slate-900 px-2 py-2.5 sm:py-3 text-center text-slate-400 font-semibold border-r border-slate-700 whitespace-nowrap">
                   Görev Yeri
                 </th>
                 {days.map((day) => {
@@ -469,25 +476,25 @@ export function MonthlyMatrix({
                         idx % 2 === 0 ? "" : "bg-slate-900/30"
                       )}
                     >
-                      {/* Employee name — sticky */}
-                      <td className="sticky left-0 bg-slate-850 group-hover:bg-slate-800 px-3 py-2 border-r border-slate-700 whitespace-nowrap z-[5]"
+                      {/* Employee name — sticky left-0 */}
+                      <td className="sticky left-0 group-hover:bg-slate-800 px-2 sm:px-3 py-2 border-r border-slate-700 whitespace-nowrap z-[15]"
                         style={{ backgroundColor: idx % 2 === 0 ? "#1e293b" : "#172033" }}
                       >
                         <div className="flex items-center gap-2">
                           <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-600/40 to-violet-600/40 border border-slate-600 flex items-center justify-center text-[9px] font-bold text-slate-400 flex-shrink-0">
                             {emp.firstName[0]}{emp.lastName[0]}
                           </div>
-                          <div>
-                            <p className="text-slate-200 font-medium leading-tight">
+                          <div className="max-w-[85px] sm:max-w-none truncate">
+                            <p className="text-slate-200 font-medium leading-tight text-xs truncate">
                               {emp.lastName} {emp.firstName}
                             </p>
-                            <p className="text-slate-600 text-[10px]">#{emp.employeeNo}</p>
+                            <p className="text-slate-500 text-[10px]">#{emp.employeeNo}</p>
                           </div>
                         </div>
                       </td>
 
-                      {/* Workplace — sticky */}
-                      <td className="sticky left-48 px-2 py-2 text-center border-r border-slate-700 whitespace-nowrap text-slate-500 z-[5]"
+                      {/* Workplace — only sticky on sm+ so table scrolls freely on mobile */}
+                      <td className="sm:sticky sm:left-48 px-2 py-2 text-center border-r border-slate-700 whitespace-nowrap text-slate-400 z-[10] text-xs"
                         style={{ backgroundColor: idx % 2 === 0 ? "#1e293b" : "#172033" }}
                       >
                         {emp.workplaceName}

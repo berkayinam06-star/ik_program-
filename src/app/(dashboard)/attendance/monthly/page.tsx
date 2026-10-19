@@ -102,7 +102,7 @@ export default async function MonthlyAttendancePage({
         subtitle={`${year} / ${String(month).padStart(2, "0")} — Devam Çizelgesi`}
       />
 
-      <div className="p-6">
+      <div className="p-2 sm:p-6 min-w-0">
         <MonthlyMatrix
           companies={companies}
           workplaces={workplaces}

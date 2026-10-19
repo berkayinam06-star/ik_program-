@@ -35,7 +35,7 @@ export default async function HolidaysPage({
         title="Resmi Tatil Yönetimi"
         subtitle="Şirkete özel resmi tatil ve özel günleri tanımlayın"
       />
-      <div className="p-6">
+      <div className="p-3 sm:p-6 min-w-0">
         <HolidaysClient
           companies={companies}
           selectedCompanyId={selectedCompanyId}

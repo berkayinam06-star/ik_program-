@@ -202,11 +202,11 @@ export function HolidaysClient({
   }
 
   return (
-    <div className="flex gap-6">
+    <div className="flex flex-col lg:flex-row gap-6 min-w-0">
       {/* LEFT: Year/Company Selector + Calendar Overview */}
       <div className="flex-1 min-w-0">
         {/* Filters */}
-        <div className="flex flex-wrap gap-3 mb-6">
+        <div className="flex flex-wrap items-center gap-2.5 mb-6">
           <div className="flex items-center gap-2 bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5">
             <Building2 className="w-4 h-4 text-slate-400" />
             <select
@@ -373,7 +373,7 @@ export function HolidaysClient({
       </div>
 
       {/* RIGHT PANEL: Quick add form (always visible on large screens) */}
-      <div className="w-80 flex-shrink-0">
+      <div className="hidden lg:block w-80 flex-shrink-0">
         <div className="bg-slate-900 border border-slate-800 rounded-xl sticky top-6">
           <div className="px-5 py-4 border-b border-slate-800">
             <h2 className="text-sm font-bold text-white flex items-center gap-2">
@@ -491,9 +491,9 @@ export function HolidaysClient({
         </div>
       </div>
 
-      {/* Mobile Modal */}
+      {/* Mobile/Tablet Modal */}
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 md:hidden">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 lg:hidden">
           <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-sm shadow-2xl">
             <div className="flex items-center justify-between px-5 py-4 border-b border-slate-800">
               <h2 className="text-sm font-bold text-white">Resmi Tatil Ekle</h2>
