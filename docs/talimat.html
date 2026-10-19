@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <title>İK / Puantaj — Geliştirme Talimatı</title>
+  <style>
+    @page { size: A4; margin: 16mm 16mm 18mm 16mm; }
+    * { box-sizing: border-box; }
+    body {
+      font-family: "Segoe UI", Arial, sans-serif;
+      font-size: 11pt;
+      line-height: 1.45;
+      color: #1e293b;
+      margin: 0;
+    }
+    h1 {
+      font-size: 20pt;
+      margin: 0 0 6px;
+      color: #0f172a;
+    }
+    .meta {
+      color: #64748b;
+      font-size: 9.5pt;
+      margin-bottom: 16px;
+      border-bottom: 2px solid #2563eb;
+      padding-bottom: 10px;
+    }
+    h2 {
+      font-size: 13pt;
+      color: #1d4ed8;
+      margin: 16px 0 8px;
+      page-break-after: avoid;
+    }
+    p { margin: 0 0 8px; }
+    ul { margin: 0 0 10px; padding-left: 18px; }
+    li { margin-bottom: 4px; }
+    .intro {
+      background: #f1f5f9;
+      border-left: 4px solid #2563eb;
+      padding: 10px 12px;
+      margin-bottom: 12px;
+    }
+    .role {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      padding: 8px 12px;
+      margin: 6px 0 10px;
+    }
+    .role strong { color: #0f172a; }
+    .out {
+      background: #fff7ed;
+      border-left: 4px solid #ea580c;
+      padding: 10px 12px;
+    }
+    .ok {
+      background: #f0fdf4;
+      border-left: 4px solid #16a34a;
+      padding: 10px 12px;
+    }
+    .check li { margin-bottom: 5px; }
+    .foot {
+      margin-top: 18px;
+      font-size: 9pt;
+      color: #64748b;
+      border-top: 1px solid #e2e8f0;
+      padding-top: 8px;
+    }
+  </style>
+</head>
+<body>
+  <h1>İK / Puantaj — Geliştirme Talimatı</h1>
+  <div class="meta">
+    Sprint görevi · 19 Ekim 2026 · Personel ekibine iletilecek resmi liste
+  </div>
+
+  <div class="intro">
+    Mevcut uygulama iskelet: personel, görev yeri, manuel giriş-çıkış, aylık matris, Excel, dönem kilidi.
+    Aşağıdakiler <strong>bu sprint’te yapılacak</strong>. Belirsiz bırakılan yer yok; aksi yazılıysa sormadan daraltma.
+  </div>
+
+  <h2>1. Kimlik doğrulama ve roller</h2>
+  <p>İki rol: <strong>admin</strong> ve <strong>personel</strong>.</p>
+  <ul>
+    <li>Giriş yoksa hiçbir sayfa ve hiçbir API çalışmaz (401).</li>
+    <li>Sidebar’daki sahte “Admin” kalkacak; gerçek oturum görünecek.</li>
+    <li>API’lerdeki <code>actorId: "admin"</code> kalkacak; işlem yapan kullanıcının id’si yazılacak.</li>
+    <li>NextAuth env var var, paket/oturum yok — bunu tamamla. Session cookie; her istekte sunucu tarafında rol kontrolü.</li>
+  </ul>
+  <div class="role">
+    <strong>admin:</strong> personel, görev yeri, şirket, giriş-çıkış, aylık puantaj, dönem kilidi, resmi tatil takvimi, Excel, kullanıcı/rol yönetimi.
+  </div>
+  <div class="role">
+    <strong>personel:</strong> sadece <strong>kendi</strong> devam özeti (okuma). Başkasının kaydı, ekleme, silme, düzenleme, dönem kilidi, Excel, tatil tanımı yok. Denemesi 403.
+  </div>
+  <p>Ekranda butonu gizlemek yetmez; aynı işlem API’den de reddedilecek.</p>
+
+  <h2>2. API’ler “kapatılmayacak”, yetkisiz bırakılmayacak</h2>
+  <p>Kapsam: <code>/api/employees</code>, <code>/api/workplaces</code>, <code>/api/attendance/*</code>, <code>/api/payroll/lock</code>, <code>/api/companies</code>, <code>/api/attendance/export</code>.</p>
+  <ul>
+    <li>Oturumsuz istek → 401</li>
+    <li>personel yazma / başkasının verisi → 403</li>
+    <li>Admin GET listeleri de oturumsuz dönmeyecek</li>
+  </ul>
+  <p>API route silme. Arayüz bunları kullanıyor. CORS’u “kapatayım” diye uygulamayı kıracak değişiklik yapma.</p>
+
+  <h2>3. Resmi tatil takvimi</h2>
+  <ul>
+    <li>Admin, yıl bazlı resmi tatil tanımlar (ekle/sil). Türkiye resmi tatilleri varsayılan yüklenebilsin; admin düzeltebilsin.</li>
+    <li>Arefe / yarım gün ayrı işaretlenebilsin.</li>
+    <li>Aylık puantajda o günler otomatik resmi tatil; o güne giriş-çıkış yazılamasın (dönem kilitli kuralı gibi).</li>
+    <li>Hafta sonu kuralı varsayılan Cmt–Paz olmasın diye görev yeri bazında ayarlanabilsin (6 gün çalışan şantiye).</li>
+    <li>Takvim + hafta sonu matriste ve Excel’de aynı görünsün.</li>
+  </ul>
+
+  <h2>4. Mobil / dar ekran</h2>
+  <p>Sadece masaüstü varsayma. Hedef: 375px ve 390px (iPhone), ayrıca 768px.</p>
+  <ul>
+    <li>Sol sabit 256px menü telefonda kullanılmayacak. Hamburger + overlay drawer; tap dışı / link sonrası kapansın.</li>
+    <li>Tablolar (personel, hareket, aylık matris) yatay kayabilsin; içerik kesilmesin.</li>
+    <li>Buton/link min. dokunma alanı ~44px.</li>
+    <li>Kontrol: Panel, Personel listesi, Günlük giriş-çıkış, Aylık puantaj, giriş ekranı.</li>
+  </ul>
+
+  <h2>5. Puantajın yarım kalan işi</h2>
+  <ul>
+    <li><strong>Vardiya:</strong> ShiftAssignment şemada var, ekran yok. Admin personel+gün için planlı giriş-çıkış ve mola tanımlayabilsin. Vardiya yokken çalışılan sürenin tamamı fazla mesai sayılmasın (plan 0 iken FM = çalışma bug’ı düzeltilecek).</li>
+    <li><strong>İzin / gün durumu:</strong> Yıllık izin, hastalık, mazeret, yarım gün, resmi tatil, istirahat. Admin günde durum basabilsin (matris hücresi veya günlük ekran). recalculateAttendanceDay izin/tatil durumunu PRESENT/ABSENT ile ezmeyecek.</li>
+    <li><strong>Gün onayı:</strong> isApproved gösteriliyor, hiç onaylanmıyor. Admin günü onaylasın/geri alsın. Paneldeki “onay bekleyen” gerçek sayı olsun. Sahte metinler (“+3 bu ay”) kalksın.</li>
+    <li><strong>Personel kaydı:</strong> Listeden silme (yumuşak silme veya pasife çekme; cascade ile tüm puantajın yok olması varsayılan olmasın). Şirket için admin ekranı olsun (şimdi sadece API).</li>
+  </ul>
+
+  <h2>6. Güvenlik / repo</h2>
+  <ul>
+    <li>.env ve .env.local git’e girmeyecek. .gitignore düzelt, örnek .env.example kalsın (şifresiz).</li>
+    <li>Audit log: gerçek kullanıcı, eylem, zaman. Admin en azından son işlemleri görebilsin (IP şart değil, kullanıcı şart).</li>
+    <li>npm audit 11 açık (6 high, 5 moderate): Tailwind 3 braces/micromatch, Next 15 içindeki eski postcss, exceljs → uuid. <strong>npm audit fix --force yasak</strong> (Tailwind 4 / Next 16 / exceljs düşürme). Gerekirse overrides ile yama; kırıcı major yok.</li>
+  </ul>
+
+  <h2>7. Zaten yapılmış — bozma</h2>
+  <div class="ok">
+    Windows’ta Neon IPv6 yüzünden her sayfa ~5 sn timeout oluyordu. <code>src/lib/prisma.ts</code> içinde IPv4-first + pg adapter var. Bunu native Prisma motoruna geri alma. Bağlantı kırmadan ilerle.
+  </div>
+
+  <h2>8. Kapsam dışı (bu sprint’te yok)</h2>
+  <div class="out">
+    Bordro (brüt/net, SGK, damga), PDKS/turnike cihaz entegrasyonu, TC/IBAN/maaş alanı, çok kiracılı SaaS.
+  </div>
+
+  <h2>Kabul kriteri</h2>
+  <ul class="check">
+    <li>Admin ve personel ile ayrı login; personel başkasını ve yazmayı göremez (UI + API denenecek).</li>
+    <li>Logout sonrası /api/employees 401.</li>
+    <li>Tatil günü matriste tatil, o güne IN/OUT 403/hata.</li>
+    <li>375px’te menü hamburger, puantaj tablosu kaydırılabilir, formlar kullanılabilir.</li>
+    <li>İzinli güne giriş basılınca izin silinmez.</li>
+    <li>Vardiyasız günde FM şişmez.</li>
+    <li>.env commit’te yok.</li>
+    <li>Dev server’da IPv6 timeout yok; sayfalar ısınmış halde saniyenin altında açılır.</li>
+  </ul>
+
+  <div class="foot">
+    Maddeler 1–7 ayrı ticket olabilir. Madde 8 “won’t do / kapsam dışı” olarak bağlanacak.
+  </div>
+</body>
+</html>

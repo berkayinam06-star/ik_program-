@@ -1,0 +1,251 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DATABASE_URL_UNPOOLED")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// COMPANY & ORGANIZATION
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Company {
+  id         String      @id @default(cuid())
+  name       String
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+
+  workplaces     Workplace[]
+  employees      Employee[]
+  payrollPeriods PayrollPeriod[]
+  publicHolidays PublicHoliday[]
+}
+
+model Workplace {
+  id                String     @id @default(cuid())
+  companyId         String
+  name              String
+  sgkRegistrationNo String?
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+
+  company   Company    @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  employees Employee[]
+
+  @@index([companyId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// EMPLOYEE
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum EmployeeStatus {
+  ACTIVE
+  PASSIVE
+  ON_LEAVE
+}
+
+model Employee {
+  id          String         @id @default(cuid())
+  companyId   String
+  workplaceId String
+  employeeNo  String
+  firstName   String
+  lastName    String
+  startDate   DateTime
+  endDate     DateTime?
+  status      EmployeeStatus @default(ACTIVE)
+  position    String?
+  isDeleted   Boolean        @default(false)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  company          Company           @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  workplace        Workplace         @relation(fields: [workplaceId], references: [id])
+  shiftAssignments ShiftAssignment[]
+  attendanceEvents AttendanceEvent[]
+  attendanceDays   AttendanceDay[]
+  user             User?
+
+  @@unique([companyId, employeeNo])
+  @@index([workplaceId])
+  @@index([companyId])
+  @@index([isDeleted])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SHIFT & ATTENDANCE
+// ─────────────────────────────────────────────────────────────────────────────
+
+model ShiftAssignment {
+  id                  String   @id @default(cuid())
+  employeeId          String
+  workDate            DateTime @db.Date
+  plannedStartAt      DateTime
+  plannedEndAt        DateTime
+  breakPolicyMinutes  Int      @default(0)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@unique([employeeId, workDate])
+  @@index([employeeId])
+  @@index([workDate])
+}
+
+enum AttendanceEventType {
+  IN
+  OUT
+}
+
+enum AttendanceEventSource {
+  MANUAL
+  DEVICE
+}
+
+model AttendanceEvent {
+  id         String                @id @default(cuid())
+  employeeId String
+  occurredAt DateTime
+  workDate   DateTime              @db.Date
+  type       AttendanceEventType
+  source     AttendanceEventSource @default(MANUAL)
+  actorId    String?
+  note       String?
+  createdAt  DateTime              @default(now())
+  updatedAt  DateTime              @updatedAt
+
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Restrict)
+
+  @@index([employeeId, workDate])
+  @@index([workDate])
+}
+
+enum AttendanceDayStatus {
+  PRESENT
+  ABSENT
+  HALF_DAY
+  ANNUAL_LEAVE
+  SICK_LEAVE
+  EXCUSED
+  PUBLIC_HOLIDAY
+  REST_DAY
+}
+
+model AttendanceDay {
+  id              String              @id @default(cuid())
+  employeeId      String
+  workDate        DateTime            @db.Date
+  status          AttendanceDayStatus @default(PRESENT)
+  workedMinutes   Int                 @default(0)
+  overtimeMinutes Int                 @default(0)
+  isApproved      Boolean             @default(false)
+  note            String?
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Restrict)
+
+  @@unique([employeeId, workDate])
+  @@index([employeeId])
+  @@index([workDate])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PAYROLL PERIOD
+// ─────────────────────────────────────────────────────────────────────────────
+
+model PayrollPeriod {
+  id        String   @id @default(cuid())
+  companyId String
+  year      Int
+  month     Int
+  isLocked  Boolean  @default(false)
+  lockedAt  DateTime?
+  lockedBy  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@unique([companyId, year, month])
+  @@index([companyId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// USER & AUTH
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum UserRole {
+  admin
+  personel
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  role         UserRole @default(personel)
+  employeeId   String?  @unique
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  employee Employee? @relation(fields: [employeeId], references: [id])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// AUDIT LOG
+// ─────────────────────────────────────────────────────────────────────────────
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorId    String?
+  action     String
+  entity     String
+  entityId   String?
+  beforeJson Json?
+  afterJson  Json?
+  timestamp  DateTime @default(now())
+  ipAddress  String?
+  userAgent  String?
+
+  @@index([entity, entityId])
+  @@index([actorId])
+  @@index([timestamp])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PUBLIC HOLIDAYS
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum HolidayType {
+  FULL_DAY
+  HALF_DAY
+}
+
+model PublicHoliday {
+  id          String      @id @default(cuid())
+  companyId   String
+  date        DateTime    @db.Date
+  name        String
+  type        HolidayType @default(FULL_DAY)
+  description String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@unique([companyId, date])
+  @@index([companyId])
+  @@index([date])
+}
